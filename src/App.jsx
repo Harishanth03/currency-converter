@@ -1,6 +1,60 @@
+import { useState } from 'react'
 import './App.css'
+import { useEffect } from 'react';
+import axios from 'axios';
 
 function App() {
+
+  const [amount , setAmount] = useState(1);
+
+  const [fromCurrency , setFromCurrency] = useState("USD");
+
+  const [toCurrency , setToCurrency] = useState("LKR");
+
+  const [convertedAmount , setConvertedAmount] = useState(null);
+
+  const [exchangeRate , setExchangeRate] = useState(null);
+
+  useEffect(() => {
+
+    const getExchangeRate = async () => {
+      
+      try
+      {
+        let URL = `https://api.exchangerate-api.com/v4/latest/${fromCurrency}`;
+
+        const response = await axios.get(URL);
+
+        //console.log(response);
+
+        setExchangeRate(response.data.rates[toCurrency]);
+      }
+      catch(error)
+      {
+        console.log("The error message is: " , error)
+      };
+
+    };
+
+    getExchangeRate();
+
+  }, [fromCurrency , toCurrency]);
+
+  useEffect(() => {
+
+    if(exchangeRate !== null)
+    {
+      setConvertedAmount((amount * exchangeRate).toFixed(2));
+    }
+
+  } , [amount , exchangeRate])
+
+  const handleAmountChange = (e) => 
+  {
+    const value = parseFloat(e.target.value);
+
+    setAmount(isNaN(value) ? 0 : value);
+  }
 
   return (
     <>
@@ -16,7 +70,7 @@ function App() {
 
             <label htmlFor="Amount">Amount: </label>
 
-            <input type="number" id='Amount'/>
+            <input type="number" value={amount} onChange={handleAmountChange} id='Amount'/>
 
           </div>
 
@@ -24,7 +78,7 @@ function App() {
 
             <label htmlFor="FromCurrency">From Currency </label>
 
-            <select id="FromCurrency">
+            <select id="FromCurrency" value={fromCurrency} onChange={(e) => {setFromCurrency(e.target.value)}}>
 
               <option value="USD">USD - United Status Dollar</option>
               <option value="EUR">EUR - Euro</option>
@@ -46,7 +100,7 @@ function App() {
 
             <label htmlFor="ToCurrency">To Currency </label>
 
-            <select id="ToCurrency">
+            <select id="ToCurrency" value={toCurrency} onChange={(e) => {setToCurrency(e.target.value)}}>
 
               <option value="USD">USD - United Status Dollar</option>
               <option value="EUR">EUR - Euro</option>
@@ -65,7 +119,7 @@ function App() {
           </div>
 
           <div className="results">
-            <p> 1 INR is Equal to 83.25 USD</p>
+            <p> {amount} {fromCurrency} is Equal to {convertedAmount} {toCurrency}</p>
           </div>
 
         </div>
